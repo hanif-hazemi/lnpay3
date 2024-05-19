@@ -40,12 +40,14 @@
             }
         }
 
-        // Polling mechanism to fetch latest payment status
+        // Polling mechanism to fetch the latest payment status
         async function fetchPaymentStatus() {
             try {
                 const response = await fetch('/api/webhook');
-                const data = await response.json();
-                handleWebhook(data);
+                if (response.ok) {
+                    const data = await response.json();
+                    handleWebhook(data);
+                }
             } catch (error) {
                 console.error('Error fetching payment status:', error);
             }
