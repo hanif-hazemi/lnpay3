@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lightning Payment Notification</title>
+    <style>
+        #qrcode {
+            width: 256px;
+            height: 256px;
+            margin: 20px auto;
+        }
+        #message {
+            text-align: center;
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="qrcode"></div>
+    <div id="message"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <script>
+        // Generate the QR code for the lightning address
+        const qr = qrcode(4, 'L');
+        qr.addData('lightning:hanif@getalby.com');
+        qr.make();
+        document.getElementById('qrcode').innerHTML = qr.createImgTag();
+
+        // Function to handle incoming webhook notifications
+        function handleWebhook(payload) {
+            if (payload.state === "SETTLED") {
+                const message = `Thank you. Payment received. ${payload.value} satoshi.`;
+                document.getElementById('message').innerText = message;
+
+                // Voice notification
+                const utterance = new SpeechSynthesisUtterance(message);
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Polling mechanism to fetch latest payment status
+        async function fetchPaymentStatus() {
+            try {
+                const response = await fetch('/api/webhook');
+                const data = await response.json();
+                handleWebhook(data);
+            } catch (error) {
+                console.error('Error fetching payment status:', error);
+            }
+        }
+
+        // Poll every 5 seconds
+        setInterval(fetchPaymentStatus, 5000);
+    </script>
+</body>
+</html>
